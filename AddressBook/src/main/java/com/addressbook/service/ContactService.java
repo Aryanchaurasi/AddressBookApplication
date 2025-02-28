@@ -1,41 +1,47 @@
 package com.addressbook.service;
 
-import com.addressbook.model.Contact;
+import com.addressbook.dto.ContactDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContactService {
-    private List<Contact> contacts = new ArrayList<>();
+    private final List<ContactDTO> contacts = new ArrayList<>();
+    private long nextId = 1; // Auto-increment ID
 
-    public List<Contact> getAllContacts() {
+    // GET all contacts
+    public List<ContactDTO> getAllContacts() {
         return contacts;
     }
 
-    public Contact addContact(Contact contact) {
-        contacts.add(contact);
-        return contact;
+    // GET contact by ID
+    public Optional<ContactDTO> getContactById(Long id) {
+        return contacts.stream().filter(contact -> contact.getId().equals(id)).findFirst();
+
     }
 
-    public Contact getContactById(int id) {
-        return contacts.stream().filter(c -> c.getId() == id).findFirst().orElse(null);
+    // POST - Add a new contact
+    public ContactDTO addContact(ContactDTO contactDTO) {
+        contactDTO.setId(nextId++); // Assign unique ID
+        contacts.add(contactDTO);
+        return contactDTO;
     }
 
-    public Contact updateContact(int id, Contact newContact) {
-        for (Contact c : contacts) {
-            if (c.getId() == id) {
-                c.setName(newContact.getName());
-                c.setEmail(newContact.getEmail());
-                c.setPhone(newContact.getPhone());
-                return c;
-            }
-        }
-        return null;
+    // PUT - Update contact by ID
+    public Optional<ContactDTO> updateContact(Long id, ContactDTO updatedContact) {
+        return getContactById(id).map(existingContact -> {
+            existingContact.setName(updatedContact.getName());
+            existingContact.setEmail(updatedContact.getEmail());
+            existingContact.setPhone(updatedContact.getPhone());
+            return existingContact;
+        });
     }
 
-    public boolean deleteContact(int id) {
-        return contacts.removeIf(c -> c.getId() == id);
+    // DELETE contact by ID
+    public boolean deleteContact(Long id) {
+        return contacts.removeIf(contact -> contact.getId().equals(id));
     }
 }
