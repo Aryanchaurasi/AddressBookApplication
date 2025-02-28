@@ -1,13 +1,15 @@
 package com.addressbook.model;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Entity
+@Table(name = "contacts")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Contact {
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String name;
     private String email;
     private String phone;

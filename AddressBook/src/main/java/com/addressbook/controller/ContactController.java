@@ -1,37 +1,63 @@
 package com.addressbook.controller;
 
 import com.addressbook.model.Contact;
-import com.addressbook.service.ContactService;
+import com.addressbook.repository.ContactRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/contacts")
 public class ContactController {
-    private final ContactService contactService;
 
-    public ContactController(ContactService contactService) {
-        this.contactService = contactService;
+    private final ContactRepository contactRepository;
+
+    public ContactController(ContactRepository contactRepository) {
+        this.contactRepository = contactRepository;
     }
+
+    // GET ALL CONTACTS
     @GetMapping
-    public List<Contact> getAllContacts() {
-        return contactService.getAllContacts();
-    }
-    @PostMapping
-    public Contact addContact(@RequestBody Contact contact) {
-        return contactService.addContact(contact);
+    public ResponseEntity<List<Contact>> getAllContacts() {
+        return ResponseEntity.ok(contactRepository.findAll());
     }
 
+    //  GET CONTACT BY ID
     @GetMapping("/{id}")
-    public Contact getContactById(@PathVariable int id) {
-        return contactService.getContactById(id);
+    public ResponseEntity<Contact> getContactById(@PathVariable Long id) {
+        Optional<Contact> contact = contactRepository.findById(id);
+        return contact.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    // CREATE NEW CONTACT
+    @PostMapping
+    public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
+        return ResponseEntity.ok(contactRepository.save(contact));
+    }
+
+    // UPDATE CONTACT BY ID
     @PutMapping("/{id}")
-    public Contact updateContact(@PathVariable int id, @RequestBody Contact contact) {
-        return contactService.updateContact(id, contact);
+    public ResponseEntity<Contact> updateContact(@PathVariable Long id, @RequestBody Contact updatedContact) {
+        return contactRepository.findById(id)
+                .map(contact -> {
+                    contact.setName(updatedContact.getName());
+                    contact.setEmail(updatedContact.getEmail());
+                    contact.setPhone(updatedContact.getPhone());
+                    return ResponseEntity.ok(contactRepository.save(contact));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    //  DELETE CONTACT BY ID
     @DeleteMapping("/{id}")
-    public String deleteContact(@PathVariable int id) {
-        return contactService.deleteContact(id) ? "Deleted Successfully" : "Contact Not Found";
+    public ResponseEntity<Void> deleteContact(@PathVariable Long id) {
+        if (contactRepository.existsById(id)) {
+            contactRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
